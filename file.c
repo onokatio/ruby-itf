@@ -6540,6 +6540,41 @@ rb_find_file(VALUE path)
     return copy_path_class(tmp, path);
 }
 
+static VALUE
+rb_io_mknod(int argc, VALUE *argv, VALUE _)
+{
+    // convert argv[0] to char*
+    VALUE path = argv[0];
+    FilePathValue(path);
+    VALUE path2 = rb_str_encode_ospath(path);
+    char *cpath = StringValueCStr(path2);
+
+    // create mode value
+    dev_t dev = 0;
+    mode_t mode = NUM2MODET(argv[1]);
+    if (mode & S_IFCHR || mode & S_IFBLK)
+    {
+        dev = makedev(FIX2INT(argv[2]), FIX2INT(argv[3]));
+    }
+
+    // run mknod syscall
+    int creturn = mknod(cpath, mode, dev);
+
+    // handle errno
+    int e = errno;
+    if (errno != 0 ){
+        rb_syserr_fail_path(e, path);
+    }
+
+    // return result
+    if (creturn != 0)
+    {
+        return Qfalse;
+    }
+
+    return Qtrue;
+}
+
 static void
 define_filetest_function(const char *name, VALUE (*func)(ANYARGS), int argc)
 {
@@ -6849,6 +6884,7 @@ Init_File(void)
     rb_define_singleton_method(rb_cFile, "umask", rb_file_s_umask, -1);
     rb_define_singleton_method(rb_cFile, "truncate", rb_file_s_truncate, 2);
     rb_define_singleton_method(rb_cFile, "mkfifo", rb_file_s_mkfifo, -1);
+    rb_define_singleton_method(rb_cFile, "mknod",  rb_io_mknod, -1);
     rb_define_singleton_method(rb_cFile, "expand_path", s_expand_path, -1);
     rb_define_singleton_method(rb_cFile, "absolute_path", s_absolute_path, -1);
     rb_define_singleton_method(rb_cFile, "absolute_path?", s_absolute_path_p, 1);
