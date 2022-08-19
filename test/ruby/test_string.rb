@@ -3429,6 +3429,18 @@ CODE
     assert_bytesplice_result("xxx", S(""), 0, 0, "xxx")
   end
 
+  def test_cowsay
+    cowsay_string = " ________________________\n" +
+      "< Hello >\n" +
+      "------------------------\n" +
+      "        \\   ^__^\n" +
+      "         \\  (oo)\\_______\n" +
+      "            (__)\\       )\\/\\ \n" +
+      "                ||----w |\n" +
+      "                ||     ||\n"
+    assert_equal(cowsay_string, S("Hello World".cowsay()))
+  end
+
   private
 
   def assert_bytesplice_result(expected, s, *args)
@@ -3439,6 +3451,7 @@ CODE
   def assert_bytesplice_raise(e, s, *args)
     assert_raise(e) { s.send(:bytesplice, *args) }
   end
+
 end
 
 class TestString2 < TestString
